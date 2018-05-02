@@ -66,6 +66,13 @@ public class CustomerClient extends JFrame implements ActionListener {
     	getAllButton.addActionListener(this);
     	addButton.addActionListener(this);
     	updateButton.addActionListener(this);
+    	deleteButton.addActionListener(this);
+    	
+    	connectButton.setEnabled(true);
+    	getAllButton.setEnabled(false);
+    	addButton.setEnabled(false);
+    	updateButton.setEnabled(false);
+    	deleteButton.setEnabled(false);
     	
     	panel2.add(connectButton);
     	panel2.add(getAllButton);
@@ -108,8 +115,7 @@ public class CustomerClient extends JFrame implements ActionListener {
 	private void connect() {
 		try {
 			// Replace 97xx with your port number
-			//socket = new Socket("turing.cs.niu.edu", 9712);
-			socket = new Socket("localhost", 9712);
+			socket = new Socket("hopper.cs.niu.edu", 9712);
 
 			System.out.println("LOG: Socket opened");
 
@@ -119,9 +125,11 @@ public class CustomerClient extends JFrame implements ActionListener {
 			System.out.println("LOG: Streams opened");
 
 			connectButton.setText("Disconnect");
-			System.out.println("button");
 			// Enable buttons
-			
+			getAllButton.setEnabled(true);
+	    	addButton.setEnabled(true);
+	    	updateButton.setEnabled(true);
+	    	deleteButton.setEnabled(true);
 
 		} catch (UnknownHostException e) {
 			System.err.println("Exception resolving host name: " + e);
@@ -134,6 +142,10 @@ public class CustomerClient extends JFrame implements ActionListener {
 		connectButton.setText("Connect");
 		
 		// Disable buttons
+		getAllButton.setEnabled(false);
+    	addButton.setEnabled(false);
+    	updateButton.setEnabled(false);
+    	deleteButton.setEnabled(false);
 		try {
 			socket.close();
 		} catch (IOException e) {
@@ -143,7 +155,7 @@ public class CustomerClient extends JFrame implements ActionListener {
 
 	private void handleGetAll() {
 		try {
-			out.writeObject("GET_ALL");
+			out.writeObject("GETALL");
 		} catch (IOException e) {
 		}
 	}
@@ -151,10 +163,10 @@ public class CustomerClient extends JFrame implements ActionListener {
 	private void handleAdd() {
 		boolean valid = true;
 		System.out.print(nameBox.getText());
-		if(nameBox.getText() == "") {bigBox.setText(bigBox.getText() + "Name is not defined\n");valid = false;}
-		if(ssnBox.getText() == "") {bigBox.setText(bigBox.getText() + "SSN is not defined\n");valid = false;}
-		if(addrBox.getText() == "") {bigBox.setText(bigBox.getText() + "Address is not defined\n");valid = false;}
-		if(zipBox.getText() == "") {bigBox.setText(bigBox.getText() + "Zip Code is not defined\n");valid = false;}
+		if(nameBox.getText().equals("")) {bigBox.setText(bigBox.getText() + "Name is not defined\n");valid = false;}
+		if(ssnBox.getText().equals("")) {bigBox.setText(bigBox.getText() + "SSN is not defined\n");valid = false;}
+		if(addrBox.getText().equals("")) {bigBox.setText(bigBox.getText() + "Address is not defined\n");valid = false;}
+		if(zipBox.getText().equals("")) {bigBox.setText(bigBox.getText() + "Zip Code is not defined\n");valid = false;}
 		if(valid) { 
 			String send = 
 					"ADD {name: '" + nameBox.getText() + 
@@ -162,23 +174,34 @@ public class CustomerClient extends JFrame implements ActionListener {
 					"', addr: '" + addrBox.getText() + 
 					"', zip: '" + zipBox.getText() + "'}";
 			try {
+				
 				out.writeObject(send);
+				//out.writeObject(send);
 			} catch (IOException e) {
 			}
 		}
 	}
 
 	private void handleDelete() {
-		try {
-			out.writeObject("DELETE ");
-		} catch (IOException e) {
+		boolean valid = true;
+		if(ssnBox.getText().equals("")) {bigBox.setText(bigBox.getText() + "SSN is not defined\n");valid = false;}
+		if(valid) {
+			try {
+				out.writeObject("DELETE {ssn: '" + ssnBox.getText() + "'}");
+			} catch (IOException e) {
+			}
 		}
 	}
 
 	private void handleUpdate() {
-		try {
-			out.writeObject("UPDATE ");
-		} catch (IOException e) {
+		boolean valid = true;
+		if(ssnBox.getText().equals("")) {bigBox.setText(bigBox.getText() + "SSN is not defined\n");valid = false;}
+		if(addrBox.getText().equals("")) {bigBox.setText(bigBox.getText() + "Address is not defined\n");valid = false;}
+		if(valid) {
+			try {
+				out.writeObject("UPDATE {ssn: '" + ssnBox.getText() + "', addr: '" + addrBox.getText() + "'}");
+			} catch (IOException e) {
+			}
 		}
 	}
 }

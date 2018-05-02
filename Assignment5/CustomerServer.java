@@ -69,9 +69,9 @@ class Conversation extends Thread {
 	private ObjectOutputStream out;
 
 	// Where JavaCustXX is your database name
-	private static final String URL = "jdbc:mysql://courses:3306/JavaCustXX";
+	private static final String URL = "jdbc:mysql://courses:3306/JavaCust12";
 
-	private Statement getAllStatement = null;
+	private PreparedStatement getAllStatement = null;
 	private PreparedStatement addStatement = null;
 	private PreparedStatement deleteStatement = null;
 	private PreparedStatement updateStatement = null;
@@ -101,17 +101,20 @@ class Conversation extends Thread {
 
 		try {
 			System.out.println("LOG: Trying to create database connection");
+			//Class.from("jdbc.jar");
 			Connection connection = DriverManager.getConnection(URL);
 
 			// Create your Statements and PreparedStatements here
-
+			this.getAllStatement = connection.prepareStatement("SELECT * FROM customer");
+			this.addStatement = connection.prepareStatement("INSERT INTO customer values(?,?,?,?)");
+			this.deleteStatement = connection.prepareStatement("DELETE FROM customer WHERE ssn=?");
+			this.updateStatement = connection.prepareStatement("UPDATE customer address=? WHERE ssn=?");
 			System.out.println("LOG: Connected to database");
 
 		} catch (SQLException e) {
 			System.err.println("Exception connecting to database manager: " + e);
 			return;
 		}
-
 		// Start the run loop.
 		System.out.println("LOG: Connection achieved, starting run loop");
 		this.start();
@@ -128,13 +131,35 @@ class Conversation extends Thread {
 		try {
 			while (true) {
 				// Read and process input from the client.
-				String output = in.readLine();
-				System.out.println(output);
+				String output = (String)in.readObject();
+				if(output != null){
+					System.out.println(output);
+					MessageObject obj = new MessageObject(output);
+					switch(obj.command){
+						case "GETALL":
+							handleGetAll(obj);
+							break;
+						case "ADD":
+							handleAdd(obj);
+							break;
+						case "DELETE":
+							handleDelete(obj);
+							break;
+						case "UPDATE":
+							handleUpdate(obj);
+							break;
+						default:
+							
+					}
+				}
 			}
 		} catch (IOException e) {
 			System.err.println("IOException: " + e);
 			System.out.println("LOG: Client disconnected");
-		} finally {
+		}
+		catch( ClassNotFoundException e){}
+
+		 finally {
 			try {
 				clientSocket.close();
 			} catch (IOException e) {
@@ -143,15 +168,71 @@ class Conversation extends Thread {
 		}
 	}
 
-	private void handleGetAll() {
+	private void handleGetAll(MessageObject clientMsg) {
+		try {
+			this.getAllStatement.executeQuery();
+			out.writeObject("Query Succsess");
+		} catch (SQLException e) {
+			try {
+				out.writeObject("Failed to execute bd query");
+			} catch (IOException e1) {
+				System.out.println("Failed to write to stream");
+			}
+		} catch (IOException e) {
+			System.out.println("Failed to write to stream");
+		}
 	}
 
-	private void handleAdd(MessageObject clientMsg) {
+	private void handleAdd(MessageObject clientMsg){
+		try {
+			this.addStatement.setString(1, clientMsg.name);
+			this.addStatement.setString(2, clientMsg.ssn);
+			this.addStatement.setString(3, clientMsg.addr);
+			this.addStatement.setString(4, clientMsg.zip);
+			this.addStatement.executeQuery();
+			out.writeObject("Query Succsess");
+		} catch (SQLException e) {
+			try {
+				out.writeObject("Failed to execute bd query");
+			} catch (IOException e1) {
+				System.out.println("Failed to write to stream");
+			}
+		} catch (IOException e) {
+			System.out.println("Failed to write to stream");
+		}
 	}
 
 	private void handleDelete(MessageObject clientMsg) {
+		try {
+			this.deleteStatement.setString(1, clientMsg.ssn);
+			this.deleteStatement.executeQuery();
+			out.writeObject("Query Succsess");
+		} catch (SQLException e) {
+			try {
+				out.writeObject("Failed to execute bd query");
+			} catch (IOException e1) {
+				System.out.println("Failed to write to stream");
+			}
+		} catch (IOException e) {
+			System.out.println("Failed to write to stream");
+		}
 	}
 
 	private void handleUpdate(MessageObject clientMsg) {
+		try {
+			this.updateStatement.setString(1, clientMsg.addr);
+			this.updateStatement.setString(2, clientMsg.ssn);
+			this.updateStatement.executeQuery();
+			out.writeObject("Query Succsess");
+		} catch (SQLException e) {
+			try {
+				out.writeObject("Failed to execute bd query");
+			} catch (IOException e1) {
+				System.out.println("Failed to write to stream");
+			}
+		} catch (IOException e) {
+			System.out.println("Failed to write to stream");
+		}
+		
 	}
 }
