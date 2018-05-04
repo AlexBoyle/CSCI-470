@@ -4,6 +4,10 @@ public class MessageObject {
 		public String ssn = "";
 		public String addr = "";
 		public String zip = "";
+		/**
+		 * Create message object
+		 * @param a string to be read
+		 */
 		public MessageObject(String a) {
 				int temp ;
 				command = a.substring(0,a.indexOf(" ") > 0 ? a.indexOf(" "):a.length());
